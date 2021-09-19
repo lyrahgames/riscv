@@ -1,0 +1,17 @@
+: 1
+name: lyrahgames-riscv
+version: 0.1.0-a.0.z
+summary: riscv-assembler C++ executable
+license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
+
+description-file: README.md
+url: https://example.org/riscv-assembler
+email: lyrahgames@mailbox.org
+
+#build-error-email: lyrahgames@mailbox.org
+builds: host : &default
+
+depends: * build2 >= 0.13.0
+depends: * bpkg >= 0.13.0
+
+depends: doctest

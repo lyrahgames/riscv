@@ -1,0 +1,7 @@
+project = lyrahgames-riscv
+
+using version
+using config
+using test
+using install
+using dist

@@ -1,0 +1,11 @@
+lib{lyrahgames-riscv}: hxx{**}
+{
+  cxx.export.poptions = "-I$src_root"
+}
+cxx.poptions =+ "-I$src_root"
+
+hxx{*}:
+{
+  install = include/lyrahgames/riscv/
+  install.subdirs = true
+}

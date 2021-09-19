@@ -1,0 +1,6 @@
+import libs = lyrahgames-riscv%lib{lyrahgames-riscv}
+import libs += doctest%lib{doctest}
+
+exe{main-tests}: {hxx ixx txx cxx}{**} $libs
+
+cxx.poptions =+ "-I$out_root" "-I$src_root"

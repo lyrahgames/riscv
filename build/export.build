@@ -1,0 +1,6 @@
+$out_root/
+{
+  include lyrahgames/riscv/
+}
+
+export $out_root/lyrahgames/riscv/$import.target
