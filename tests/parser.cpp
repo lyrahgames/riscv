@@ -3,6 +3,7 @@
 //
 #include <doctest/doctest.h>
 //
+#include <lyrahgames/riscv/assembler/deprecated.hpp>
 #include <lyrahgames/riscv/assembler/lexer.hpp>
 #include <lyrahgames/riscv/assembler/parser.hpp>
 
@@ -157,3 +158,20 @@ SCENARIO("Parsing Directives") {
 
   cout << prog << '\n';
 }
+
+// SCENARIO("Parsing") {
+//   program prog;
+//   auto str =  //
+//       "main:\n"
+//       "      addi t0, t1, 10\n"
+//       "loop: call test\n"
+//       "      ld ra, 50(sp)\n"
+//       "test:\n"
+//       "  ret\n"
+//       "  bne a0,a3,loop";
+
+//   auto success = parse(str, prog);
+//   CHECK(success);
+
+//   cout << prog << '\n';
+// }

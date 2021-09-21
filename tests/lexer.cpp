@@ -1,8 +1,10 @@
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 //
 #include <doctest/doctest.h>
 //
+#include <lyrahgames/riscv/assembler/deprecated.hpp>
 #include <lyrahgames/riscv/assembler/lexer.hpp>
 
 using namespace std;
@@ -200,4 +202,42 @@ SCENARIO("Tokenization") {
     CHECK(get<separator>(tokens[n++]) == ')');
     CHECK(holds_alternative<monostate>(tokens[n++]));
   }
+}
+
+SCENARIO("Lexer") {
+  auto str =
+      "ld a0, 0x10 ( s0)\n"
+      "\n"
+      "main: // This is a comment\n"
+      "      addi t0, t1, 10\n"
+      "loop: call /* Multi-line comment */ test\n"
+      "\n"
+      "\n"
+      "      ld ra, 50(sp)\n"
+      "/*test:\n"
+      "\n"
+      "  r*/et\n"
+      "  bne a0,a3,loop\n"
+      " ";
+  auto stream = stringstream{str};
+  lexer lex{stream};
+  int i = 0;
+  while (lex) {
+    lex.scan_line();
+    // for (auto it = begin(lex.token_buffer); *it != lexer::token{}; ++it) {
+    //   auto& t = *it;
+    //   cout << t;
+    //   if (t == lexer::token{'\n'}) cout << '\n';
+    // }
+    cout << setw(5) << i << ": ";
+    for (auto& t : lex.token_buffer) cout << t;
+    cout << '\n';
+    // cout << lex.buffer << '\n';
+    // cout << lex.tokens << '\n';
+    // cout << '\n';
+    // auto t = lex.next_token();
+    // cout << t;
+    ++i;
+  }
+  cout << '\n';
 }
