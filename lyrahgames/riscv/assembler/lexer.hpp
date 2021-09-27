@@ -22,6 +22,9 @@ struct lexer {
   using char_type = char;
   using char_traits = stream::traits_type;
   using int_type = typename char_traits::int_type;
+  using identifier = std::string;
+  using int_literal = int;
+  using separator = char;
   using token = std::variant<std::monostate, char, std::string, int>;
 
   lexer(std::istream& s) : source{s} {}
@@ -47,7 +50,7 @@ struct lexer {
   }
 
   static constexpr bool is_lexeme_end(int_type c) {
-    return !c || is_space(c) || is_separator(c);
+    return is_space(c) || is_separator(c) || is_end(c);
   }
 
   static constexpr bool is_lowercase_letter(int_type c) {
@@ -150,6 +153,12 @@ struct lexer {
 
   void ignore_space() {
     while (is_space(source.peek())) source.ignore();
+  }
+
+  bool newline_match() {
+    if (!is_newline(source.peek())) return false;
+    source.ignore();
+    return true;
   }
 
   bool multiline_comment_match() {
@@ -256,11 +265,25 @@ struct lexer {
     return result;
   }
 
-  auto scan_token() -> token {
+  auto next_token() -> token {
     while (true) {
       ignore_space();
       if (line_comment_match()) continue;
       if (multiline_comment_match()) continue;
+      if (newline_match()) {
+        if (newline_started) continue;
+        newline_started = true;
+        return token{'\n'};
+      }
+      if (is_end(source.peek())) {
+        if (newline_started) {
+          eof_reached = true;
+          return {};
+        }
+        newline_started = true;
+        return token{'\n'};
+      }
+      newline_started = false;
       if (is_separator(source.peek())) return token{char(source.get())};
       if (const auto m = identifier_match()) return m.value();
       if (const auto m = int_literal_match()) return m.value();
@@ -268,24 +291,7 @@ struct lexer {
     }
   }
 
-  void scan_line() {
-    token_buffer.clear();
-    token t;
-    do {
-      t = scan_token();
-      while ((t != token{}) && (t != token{'\n'})) {
-        token_buffer.push_back(t);
-        t = scan_token();
-      }
-    } while (token_buffer.empty() && (t != token{}));
-    if (!token_buffer.empty())
-      token_buffer.push_back({'\n'});
-    else
-      eof_reached = true;
-    // Sentinel
-    token_buffer.push_back({});
-  }
-
+  bool newline_started = true;
   bool eof_reached = false;
   stream& source;
   std::string line_buffer;

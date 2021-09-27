@@ -6,9 +6,7 @@
 
 namespace lyrahgames::riscv {
 
-constexpr bool is_space(char c) {
-  return (c == ' ') || (c == '\t');
-}
+constexpr bool is_space(char c) { return (c == ' ') || (c == '\t'); }
 
 constexpr bool is_separator(char c) {
   return (c == ',') || (c == '(') || (c == ')') || (c == ':') || (c == '\n');
@@ -18,33 +16,21 @@ constexpr bool is_lexeme_end(char c) {
   return !c || is_space(c) || is_separator(c);
 }
 
-constexpr bool is_lowercase_letter(char c) {
-  return ('a' <= c) && (c <= 'z');
-}
+constexpr bool is_lowercase_letter(char c) { return ('a' <= c) && (c <= 'z'); }
 
-constexpr bool is_uppercase_letter(char c) {
-  return ('A' <= c) && (c <= 'Z');
-}
+constexpr bool is_uppercase_letter(char c) { return ('A' <= c) && (c <= 'Z'); }
 
-constexpr char lowercase_letter(char c) {
-  return c | 0b0010'0000;
-}
+constexpr char lowercase_letter(char c) { return c | 0b0010'0000; }
 
-constexpr char uppercase_letter(char c) {
-  return c & 0b1101'1111;
-}
+constexpr char uppercase_letter(char c) { return c & 0b1101'1111; }
 
 constexpr bool is_letter(char c) {
   return is_uppercase_letter(uppercase_letter(c));
 }
 
-constexpr bool is_digit(char c) {
-  return ('0' <= c) && (c <= '9');
-}
+constexpr bool is_digit(char c) { return ('0' <= c) && (c <= '9'); }
 
-constexpr auto digit(char c) -> int {
-  return c - '0';
-}
+constexpr auto digit(char c) -> int { return c - '0'; }
 
 constexpr auto binary_digit(char c) -> std::optional<int> {
   if (('0' == c) || (c == '1')) return digit(c);
@@ -83,9 +69,10 @@ constexpr auto ignore_space(czstring str) -> czstring {
 
 /// Parses given string into an integer literal.
 /// If successful, the optional result contains the actual integer value.
-/// If the given string could not be parsed, the optional result contains nothing.
-/// The iterator reference 'end' contains the position when parsing stopped.
-/// It may be used to further parse other elements or do some error handling.
+/// If the given string could not be parsed, the optional result contains
+/// nothing. The iterator reference 'end' contains the position when parsing
+/// stopped. It may be used to further parse other elements or do some error
+/// handling.
 constexpr auto int_literal_match(czstring_iterator str, czstring_iterator& end)
     -> std::optional<int>;
 

@@ -1,22 +1,22 @@
 #pragma once
 #include <optional>
 //
-#include <lyrahgames/riscv/assembler/instruction.hpp>
-#include <lyrahgames/riscv/assembler/int_register.hpp>
-#include <lyrahgames/riscv/assembler/memory_address.hpp>
-#include <lyrahgames/riscv/assembler/operand.hpp>
+#include <lyrahgames/riscv/assembler/lexer.hpp>
 #include <lyrahgames/riscv/assembler/program.hpp>
-#include <lyrahgames/riscv/assembler/symbol_table.hpp>
-#include <lyrahgames/riscv/assembler/token.hpp>
 
 namespace lyrahgames::riscv {
 
 struct parser {
-  using lexer = lexer;
+  // using lexer = lexer;
   using token = lexer::token;
+  using token_list = std::vector<token>;
+  using token_iterator = typename token_list::iterator;
+  using identifier = std::string;
+  using int_literal = int;
 
-  auto int_register_match(token_iterator it,
-                          token_iterator& last,
+  parser(lexer& l) : lex{l} {}
+
+  auto int_register_match(token_iterator it, token_iterator& last,
                           symbol_table& symbols)
       -> std::optional<int_register> {
     if (!std::holds_alternative<identifier>(*it)) return {};
@@ -26,8 +26,7 @@ struct parser {
     return e->second;
   }
 
-  auto memory_address_match(token_iterator it,
-                            token_iterator& last,
+  auto memory_address_match(token_iterator it, token_iterator& last,
                             symbol_table& symbols)
       -> std::optional<memory_address> {
     memory_address result{};
@@ -49,8 +48,7 @@ struct parser {
     return result;
   }
 
-  auto operand_match(token_iterator it,
-                     token_iterator& last,
+  auto operand_match(token_iterator it, token_iterator& last,
                      symbol_table& symbols) -> std::optional<operand_value> {
     // Memory Address
     if (const auto m = memory_address_match(it, last, symbols))
@@ -71,8 +69,7 @@ struct parser {
     return {};
   }
 
-  auto operand_list_match(token_iterator it,
-                          token_iterator& last,
+  auto operand_list_match(token_iterator it, token_iterator& last,
                           symbol_table& symbols)
       -> std::optional<operand_value_list> {
     operand_value_list result{};
@@ -96,8 +93,7 @@ struct parser {
     return {};
   }
 
-  auto instruction_match(token_iterator it,
-                         token_iterator& last,
+  auto instruction_match(token_iterator it, token_iterator& last,
                          symbol_table& symbols) -> std::optional<instruction> {
     last = it;
     // First, check for an identifier token.
@@ -137,8 +133,7 @@ struct parser {
     return {};
   }
 
-  auto label_definition_match(token_iterator it,
-                              token_iterator& last,
+  auto label_definition_match(token_iterator it, token_iterator& last,
                               program& prog) -> std::optional<label_id> {
     last = it;
     if (!holds_alternative<identifier>(*last)) return {};
@@ -155,7 +150,10 @@ struct parser {
     if (!optlabel) last = it;
     auto optinstr = instruction_match(last, last, prog.symbols);
     if (optinstr) prog.instructions.push_back(optinstr.value());
-    return bool(optlabel) || bool(optinstr);
+    if (!(bool(optlabel) || bool(optinstr))) return false;
+    if (*last != token{'\n'}) return false;
+    ++last;
+    return true;
   }
 
   void prefetch_token_line() {
@@ -163,35 +161,29 @@ struct parser {
     token t;
     do {
       t = lex.next_token();
-      while ((t != token{}) && (t != token{'\n'})) {
-        token_buffer.push_back(t);
-        t = lex.next_token();
-      }
-    } while (token_buffer.empty() && (t != token{}));
-    if (!token_buffer.empty())
-      token_buffer.push_back({'\n'});
-    else
-      eof_reached = true;
-    // Sentinel
-    token_buffer.push_back({});
+      token_buffer.push_back(t);
+    } while ((t != token{}) && (t != token{'\n'}));
   }
 
   void parse(program& prog) {
+    int i = 0;
     while (lex) {
       prefetch_token_line();
-      auto it = token_buffer.cbegin();
+      auto it = token_buffer.begin();
+      if (*it == token{}) break;
       auto success = directive_match(it, it, prog);
-      // CHECK(success);
-      // CHECK(holds_alternative<monostate>(*it));
+      if (!success)
+        throw std::runtime_error("Failed to parse directive at line " +
+                                 std::to_string(i));
+      ++i;
     }
   }
 
   lexer& lex;
-  std::vector<token_type> token_buffer{};
+  token_list token_buffer{};
 };
 
-inline auto int_register_match(token_iterator it,
-                               token_iterator& last,
+inline auto int_register_match(token_iterator it, token_iterator& last,
                                symbol_table& symbols)
     -> std::optional<int_register> {
   if (!std::holds_alternative<identifier>(*it)) return {};
@@ -201,8 +193,7 @@ inline auto int_register_match(token_iterator it,
   return e->second;
 }
 
-inline auto memory_address_match(token_iterator it,
-                                 token_iterator& last,
+inline auto memory_address_match(token_iterator it, token_iterator& last,
                                  symbol_table& symbols)
     -> std::optional<memory_address> {
   memory_address result{};
@@ -224,8 +215,7 @@ inline auto memory_address_match(token_iterator it,
   return result;
 }
 
-inline auto operand_match(token_iterator it,
-                          token_iterator& last,
+inline auto operand_match(token_iterator it, token_iterator& last,
                           symbol_table& symbols)
     -> std::optional<operand_value> {
   // Memory Address
@@ -246,8 +236,7 @@ inline auto operand_match(token_iterator it,
   return {};
 }
 
-inline auto operand_list_match(token_iterator it,
-                               token_iterator& last,
+inline auto operand_list_match(token_iterator it, token_iterator& last,
                                symbol_table& symbols)
     -> std::optional<operand_value_list> {
   operand_value_list result{};
@@ -271,8 +260,7 @@ inline auto operand_list_match(token_iterator it,
   return {};
 }
 
-inline auto instruction_match(token_iterator it,
-                              token_iterator& last,
+inline auto instruction_match(token_iterator it, token_iterator& last,
                               symbol_table& symbols)
     -> std::optional<instruction> {
   last = it;
@@ -311,8 +299,7 @@ inline auto instruction_match(token_iterator it,
   return {};
 }
 
-inline auto label_definition_match(token_iterator it,
-                                   token_iterator& last,
+inline auto label_definition_match(token_iterator it, token_iterator& last,
                                    program& prog) -> std::optional<label_id> {
   last = it;
   if (!holds_alternative<identifier>(*last)) return {};
@@ -324,8 +311,7 @@ inline auto label_definition_match(token_iterator it,
   return id;
 }
 
-inline bool directive_match(token_iterator it,
-                            token_iterator& last,
+inline bool directive_match(token_iterator it, token_iterator& last,
                             program& prog) {
   auto optlabel = label_definition_match(it, last, prog);
   if (!optlabel) last = it;
@@ -335,3 +321,5 @@ inline bool directive_match(token_iterator it,
 }
 
 }  // namespace lyrahgames::riscv
+
+#include <lyrahgames/riscv/assembler/parser.ipp>

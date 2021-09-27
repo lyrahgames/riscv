@@ -175,3 +175,53 @@ SCENARIO("Parsing Directives") {
 
 //   cout << prog << '\n';
 // }
+
+SCENARIO("") {
+  auto str =
+      "ld a0, 0x10 ( s0)\n"
+      "\n"
+      "main: // This is a comment\n"
+      "      addi t0, t1, 10\n"
+      "loop: call /* Multi-line comment */ test\n"
+      "\n"
+      "\n"
+      "      ld ra, 50(sp)\n"
+      "/*test:\n"
+      "\n"
+      "  r*/et\n"
+      "  bne a0,a3,loop\n"
+      "\t\n"
+      "  ";
+  auto stream = stringstream{str};
+  lexer l{stream};
+  parser p{l};
+  while (l) {
+    p.prefetch_token_line();
+    for (const auto& t : p.token_buffer) cout << t;
+    cout << '\n';
+  }
+}
+
+SCENARIO("") {
+  auto str =
+      "ld a0, 0x10 ( s0)\n"
+      "\n"
+      "main: // This is a comment\n"
+      "      addi t0, t1, 10\n"
+      "loop: call /* Multi-line comment */ test\n"
+      "\n"
+      "\n"
+      "      ld ra, 50(sp)\n"
+      "/*test:\n"
+      "\n"
+      "  */ret\n"
+      "  bne a0,a3,loop\n"
+      "\t\n"
+      "  ";
+  auto stream = stringstream{str};
+  lexer l{stream};
+  parser p{l};
+  program prog;
+  p.parse(prog);
+  cout << prog;
+}
